@@ -1,39 +1,70 @@
-# Proyecto: Analizador de Dúos Dinámicos de la NBA
+# Jugadores NBA API
 
-## 1. Intención Inicial y Reglas de Negocio
-**Idea del mini-proyecto:** 
-Un simulador que carga estadísticas de jugadores de baloncesto de forma asíncrona, filtra candidatos por posición y combina a dos de ellos al azar para diagnosticar la química y el poder general del dúo resultante.
+API REST temática de un catálogo de jugadores de la NBA. Construida con Node.js, Express y TypeScript, usando datos en memoria (sin base de datos)[cite: 27].
 
-**Restricciones:**
-* El catálogo solo acepta jugadores con las 5 posiciones oficiales (Base, Escolta, Alero, Ala-Pívot, Pívot).
-* Cada carta de jugador tiene una estructura estricta con estadísticas agrupadas (puntos, rebotes, asistencias).
-* El sistema captura errores sin colapsar si se intenta analizar un jugador corrupto o inexistente.
+## Tema
 
-**Criterios de aceptación:**
-* Uso de Promesas para simular el tiempo de búsqueda asíncrona no bloqueante.
-* Uso de funciones de orden superior (`filter`, `reduce`) para analizar el catálogo.
-* Uso de *destructuring* y *spread operator* para crear el dúo híbrido sin mutar los datos originales.
+El recurso principal es el **JugadorNBA**, con los siguientes campos[cite: 27]:
 
----
+* `id` : identificador único
+* `nombre` : nombre del jugador
+* `equipo` : franquicia a la que pertenece
+* `posicion` : `"Base"` | `"Escolta"` | `"Alero"` | `"Ala-Pívot"` | `"Pívot"`
+* `rareza` : `"Común"` | `"Rara"` | `"Leyenda"`
+* `estadisticas` : objeto anidado con `puntos`, `rebotes` y `asistencias`
 
-## 2. Instrucciones de Ejecución
+## Estructura del proyecto
 
-### Para la versión JavaScript:
-Abre la terminal y ejecuta los siguientes comandos:
-1. Entrar a la carpeta: `cd version-javascript`
-2. Iniciar el simulador: `npm start`
+```text
+src/
+├── controllers/
+│   └── jugadores.controller.ts  # maneja req/res de cada endpoint
+├── data/
+│   └── jugadores.ts             # base de datos en memoria
+├── middlewares/
+│   ├── errorHandler.ts          # manejo centralizado de errores
+│   ├── logger.ts                # logging de cada request
+│   └── requestId.ts             # asigna UUID único a peticiones
+├── routes/
+│   └── jugadores.routes.ts      # define las rutas REST
+├── services/
+│   └── jugadores.service.ts     # lógica de negocio
+├── apiError.ts                  # clase de error HTTP personalizada
+├── app.ts                       # ensamblaje de la aplicación y middlewares
+├── index.ts                     # punto de entrada, arranca el servidor
+└── tipos.ts                     # tipos e interfaces del dominio
 
-### Para la versión TypeScript:
-Abre la terminal y ejecuta los siguientes comandos:
-1. Entrar a la carpeta: `cd version-typescript`
-2. Instalar dependencias (TypeScript): `npm install`
-3. Compilar y ejecutar: `npm run dev`
+## Instalación:
+npm install
 
----
+## Ejecución
+Modo desarrollo (con recarga automática):
+npm run dev
 
-## 3. Decisiones de Tipado (TypeScript)
-Para blindar el simulador, se implementaron las siguientes estructuras en `src/tipos.ts`:
+## Compilar a JavaScript:
+npm build
 
-* **Uniones Literales (`Posicion` y `Rareza`):** Actúan como un candado de seguridad. Al limitar la posición estrictamente a valores como `"Base"` o `"Alero"`, el compilador detecta inmediatamente cualquier error tipográfico y evita que se ingresen posiciones inválidas.
-* **Interface Anidada (`EstadisticasJugador`):** Agrupa lógicamente las estadisticas (puntos, rebotes, asistencias) para mantener el código ordenado y hacer más facil el *destructuring*.
-* **Interface Principal (`JugadorNBA`):** Define el molde exacto que debe tener cada carta. Si a un jugador le falta un campo o tiene un tipo de dato incorrecto, el programa no compilará, lo que ayuda a la integridad de los datos.
+## Ejecutar la versión compilada:
+npm start
+
+**El servidor corre por defecto en http://localhost:3000**
+
+
+# Endpoints
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | /jugadores | Lista de todos los jugadores |
+| GET | /jugadores/:id | Obtiene un jugador por su id |
+| POST | /jugadores | Crea un nuevo jugador |
+| PUT | /jugador/:id | Actualiza un jugador existente |
+| DELETE | /jugador/:id | Elimina un jugador |
+
+Ejemplos de request/response de cada endpoint, incluyendo casos de error, están documentados en [requests.md](./requests.md).
+
+## Middlewares
+* Request ID: asigna un identificador único (UUID) a cada petición antes de ser procesada para facilitar el rastreo.
+
+* Logger: registra método, ruta, id de petición y duración de cada request de forma no bloqueante.
+
+* Manejo centralizado de errores: captura errores lanzados con next(error) en cualquier capa y responde con un JSON consistente ({ error: mensaje, requestId: id }) y el código HTTP correspondiente
